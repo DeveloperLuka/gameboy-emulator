@@ -1,12 +1,9 @@
 pub mod cpu;
-
-#[test]
-fn works() {
-    assert_eq!(2 + 2, 4);
-}
+mod memory;
 
 fn main() {
-    let mut cpu = cpu::CPU::new();
+    let mut memory = memory::Memory::new();
+    let mut cpu = cpu::CPU::new(&mut memory);
     cpu.run();
     println!("Hello, world!");
 }

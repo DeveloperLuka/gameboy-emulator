@@ -1,6 +1,6 @@
 pub struct Registers {
     pub a: u8,
-    pub f: u8,
+    pub f: Flag,
     pub b: u8,
     pub c: u8,
     pub d: u8,
@@ -10,6 +10,7 @@ pub struct Registers {
     pub sp: u16,
     pub pc: u16,
 }
+
 impl Registers {
     pub fn bc(&mut self) -> U16Register<'_> {
         U16Register {
@@ -43,20 +44,6 @@ impl Registers {
             value: U16Value::U16 {
                 value: &mut self.sp,
             },
-        }
-    }
-
-    pub fn map_register_from_octet(&mut self, octet: u8) -> &mut u8 {
-        match octet {
-            0o0 => &mut self.b,
-            0o1 => &mut self.c,
-            0o2 => &mut self.d,
-            0o3 => &mut self.e,
-            0o4 => &mut self.h,
-            0o5 => &mut self.l,
-            0o6 => &mut self.b, // TODO wherever hl is pointing to has to be hanlded extra
-            0o7 => &mut self.a,
-            _ => unimplemented!(),
         }
     }
 
@@ -96,5 +83,56 @@ impl<'a> U16Register<'a> {
             }
             U16Value::U16 { value } => **value = new_value,
         }
+    }
+}
+
+const Z_FLAG: u8 = 0b1000_0000;
+const N_FLAG: u8 = 0b0100_0000;
+const H_FLAG: u8 = 0b0010_0000;
+const C_FLAG: u8 = 0b0001_0000;
+
+pub struct Flag {
+    pub f: u8,
+}
+
+impl Flag {
+    fn set_flag(&mut self, mask: u8, state: bool) {
+        if state {
+            self.f |= mask;
+        } else {
+            self.f &= !mask;
+        }
+    }
+
+    pub fn is_zero(&self) -> bool {
+        self.f & Z_FLAG != 0
+    }
+
+    pub fn set_zero(&mut self, zero: bool) {
+        self.set_flag(Z_FLAG, zero);
+    }
+
+    pub fn is_substraction(&self) -> bool {
+        self.f & N_FLAG != 0
+    }
+
+    pub fn set_substraction(&mut self, substraction: bool) {
+        self.set_flag(N_FLAG, substraction);
+    }
+
+    pub fn is_half_carry(&self) -> bool {
+        self.f & H_FLAG != 0
+    }
+
+    pub fn set_half_carry(&mut self, half_carry: bool) {
+        self.set_flag(H_FLAG, half_carry);
+    }
+
+    pub fn is_carry(&self) -> bool {
+        self.f & C_FLAG != 0
+    }
+
+    pub fn set_carry(&mut self, carry: bool) {
+        self.set_flag(C_FLAG, carry);
     }
 }
